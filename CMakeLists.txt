@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 2.8.12)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+include(ObsPluginHelpers)
+project(record)
+
+find_package(Libobs REQUIRED)
+SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+add_executable(record record.cpp)
+target_link_libraries(record ${LIBOBS_LIBRARIES})
+include_directories(${LIBOBS_INCLUDE_DIRS})
+link_directories(${LIBOBS_LIBRARIES})
+install_external_plugin(record)
