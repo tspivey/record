@@ -4,8 +4,12 @@
 #include <obs.h>
 #include "record.h"
 
-int main()
+int main(int argc, char **argv)
 {
+	if (argc < 3) {
+		fprintf(stderr, "Usage: %s outfile codec", argv[0]);
+		exit(1);
+	}
 	if ((obs_startup("en-us", nullptr, nullptr)) == false) {
 		fprintf(stderr, "Error starting obs.\n");
 		exit(1);
@@ -19,8 +23,14 @@ int main()
 	set_audio("wasapi_input_capture", "default", "mic", 0, (1<<0));
 	set_audio("wasapi_output_capture", "default", "system", 1, (1<<1));
 	//Create one aac encoder per channel
-	obs_encoder_t *enc0 = obs_audio_encoder_create("ffmpeg_aac", "aac0", nullptr, 0, nullptr);
-	obs_encoder_t *enc1 = obs_audio_encoder_create("ffmpeg_aac", "aac1", nullptr, 1, nullptr);
+	obs_data_t *settings = obs_data_create();
+	obs_data_set_string(settings, "encoder", argv[2]);
+	obs_encoder_t *enc0 = obs_audio_encoder_create("ffmpeg_aac", "aac0", settings, 0, nullptr);
+	obs_data_release(settings);
+	settings = obs_data_create();
+	obs_data_set_string(settings, "encoder", argv[2]);
+	obs_encoder_t *enc1 = obs_audio_encoder_create("ffmpeg_aac", "aac1", settings, 1, nullptr);
+	obs_data_release(settings);
 //And the file output
 	obs_output_t *output = obs_output_create("ffmpeg_muxer", "outfile", nullptr, nullptr);
 	obs_output_set_audio_encoder(output, enc0, 0);
@@ -29,10 +39,9 @@ int main()
 	obs_encoder_set_audio(enc0, audio);
 	obs_encoder_set_audio(enc1, audio);
 
-	obs_data_t *settings = obs_data_create();
+	settings = obs_data_create();
 	obs_data_set_string(settings, "format_name", "mkv");
-	obs_data_set_string(settings, "audio_encoder", "aac");
-	obs_data_set_string(settings, "path", "test.mkv");
+	obs_data_set_string(settings, "path", argv[1]);
 	obs_output_update(output, settings);
 	obs_data_release(settings);
 	if (obs_output_can_begin_data_capture(output, 0) == false ||
