@@ -54,7 +54,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	Sleep(5000);
+	while (1) {
+		Sleep(5000);
+	}
 }
 
 bool reset_audio()
