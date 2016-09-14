@@ -4,6 +4,8 @@
 #include <obs.h>
 #include "record.h"
 
+HANDLE hEvent;
+
 int main(int argc, char **argv)
 {
 	if (argc < 3) {
@@ -49,14 +51,14 @@ int main(int argc, char **argv)
 		fprintf(stderr, "can't begin data capture.\n");
 		exit(1);
 	}
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	signal_handler_connect(obs_output_get_signal_handler(output), "stop", output_stopped, NULL);
 	if (obs_output_start(output) == false) {
 		fprintf(stderr, "Failed to start output\n");
 		exit(1);
 	}
 
-	while (1) {
-		Sleep(5000);
-	}
+	WaitForSingleObject(hEvent, INFINITE);
 }
 
 bool reset_audio()
@@ -76,4 +78,8 @@ void set_audio(char *sourceId, char *deviceId, char *deviceDesc, int channel, in
 	obs_set_output_source(channel, source);
 	obs_source_set_audio_mixers(source, mixers);
 	obs_source_release(source);
+}
+
+void output_stopped(void *data, calldata_t *calldata) {
+SetEvent(hEvent);
 }
